@@ -8,9 +8,7 @@ LL ans;
 LL num[maxn];
 
 int main() {
-#ifdef ExRoc
-    freopen("test.txt", "r", stdin);
-#endif // ExRoc
+    ios::sync_with_stdio(false);
 
     cin >> T;
     while (T--) {

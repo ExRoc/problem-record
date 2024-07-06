@@ -14,9 +14,6 @@ bool judge(LL mid) {
 }
 
 int main() {
-#ifdef ExRoc
-    freopen("test.txt", "r", stdin);
-#endif
     ios::sync_with_stdio(false);
 
     cin >> T;

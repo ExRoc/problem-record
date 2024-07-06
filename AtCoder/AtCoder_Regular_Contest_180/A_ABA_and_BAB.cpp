@@ -9,9 +9,7 @@ LL ans, tmp;
 char str[maxn];
 
 int main() {
-#ifdef ExRoc
-    freopen("test.txt", "r", stdin);
-#endif
+    ios::sync_with_stdio(false);
 
     cin >> n >> str;
     ans = 1;

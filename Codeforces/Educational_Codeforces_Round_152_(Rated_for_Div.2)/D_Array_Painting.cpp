@@ -17,9 +17,6 @@ int findNext(int idx) {
 }
 
 int main() {
-#ifdef ExRoc
-    freopen("test.txt", "r", stdin);
-#endif // ExRoc
     ios::sync_with_stdio(false);
 
     cin >> n;

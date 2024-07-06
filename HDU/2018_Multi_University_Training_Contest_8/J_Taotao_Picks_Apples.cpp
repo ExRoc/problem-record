@@ -29,9 +29,7 @@ int getAns(int idx, int x) {
 }
 
 int main() {
-#ifdef ExRoc
-    freopen("test.txt", "r", stdin);
-#endif
+    ios::sync_with_stdio(false);
 
     scanf("%d", &T);
     while (T--) {
