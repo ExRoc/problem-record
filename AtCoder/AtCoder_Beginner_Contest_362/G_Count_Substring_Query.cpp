@@ -12,7 +12,6 @@ struct ac_auto {
     int fail[maxcnt], que[maxcnt];
     vector<int> vct[maxcnt];
     int tot[maxcnt], ans[maxn];
-    bool flag[maxcnt];
 
     int create() {
         memset(tree[cnt], -1, sizeof(tree[cnt]));
@@ -36,7 +35,6 @@ struct ac_auto {
             }
             pos = tree[pos][w];
         }
-        flag[pos] = true;
         vct[pos].push_back(idx);
     }
 
@@ -54,9 +52,6 @@ struct ac_auto {
         }
         while (head != tail) {
             int pos = que[head++];
-            if (flag[fail[pos]]) {
-                flag[pos] = true;
-            }
             for (int i = 0; i < ac_size; ++i) {
                 if (tree[pos][i] == -1) {
                     tree[pos][i] = tree[fail[pos]][i];
@@ -73,14 +68,12 @@ struct ac_auto {
         for (int i = 0; str[i]; ++i) {
             int w = id(str[i]);
             pos = tree[pos][w];
-            if (flag[pos]) {
-                ++tot[pos];
-            }
+            ++tot[pos];
         }
         for (int i = cnt - 1; i >= 0; --i) {
-            tot[fail[i]] += tot[i];
-            for (int idx : vct[i]) {
-                ans[idx] = tot[i];
+            tot[fail[que[i]]] += tot[que[i]];
+            for (int idx : vct[que[i]]) {
+                ans[idx] = tot[que[i]];
             }
         }
     }

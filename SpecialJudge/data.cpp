@@ -32,21 +32,17 @@ int main() {
     ios::sync_with_stdio(false);
     srand(time(0));
 
-    cout << 1 << endl;
-    int n = getRand(1, 12);
-    n = 12;
-    int m = getRand(1, 20);
-    m = 20;
-    int k = getRand(1, 20);
-    k = 20;
-    cout << n << " " << m << " " << k << endl;
+    int n = getRand(5, 20);
     for (int i = 0; i < n; ++i) {
-        for (int j = 0; j < m; ++j) {
-            if (getRand(0, 1) == 0) {
-                cout << ".";
-            } else {
-                cout << "Q";
-            }
+        cout << (char)('a' + getRand(0, 5));
+    }
+    cout << endl;
+    int q = getRand(1, 5);
+    cout << q << endl;
+    while (q--) {
+        n = getRand(1, 5);
+        for (int i = 0; i < n; ++i) {
+            cout << (char)('a' + getRand(0, 5));
         }
         cout << endl;
     }

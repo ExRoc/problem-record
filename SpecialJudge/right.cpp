@@ -1,87 +1,121 @@
-#include <bits/stdc++.h>
+#include <cstring>
+#include <iostream>
+#include <queue>
+#include <string>
+#include <unordered_map>
+#include <vector>
 using namespace std;
-
-#define LL long long
-const int maxn = 22;
-const int maxm = 13;
-const int maxk = 21;
-const int maxbit = 531500;
-const LL Limit = 1e12;
-int T, n, m, k;
-LL ans[maxk], fac[maxk];
-char str[maxm][maxn];
-LL dp[maxn][maxbit];
-int pow_3[maxm], bit_cnt_3[maxbit][3], bit_3[maxbit][maxm];
-
-void Init() {
-    pow_3[0] = 1;
-    for (int i = 1; i < maxm; ++i) {
-        pow_3[i] = pow_3[i - 1] * 3;
+typedef struct Trie Trie;
+vector<Trie*> arr;  // 存入AC自动机中所有的节点
+struct Trie {
+    Trie* links[26];
+    Trie* fail;
+    bool flag;             // 记录是否是字符串
+    int postion, in, ans;  // postion 记录该字符串的位置 默认为 -1 , in
+                           // 为该节点的入度 ans 为距离
+    Trie() {
+        memset(links, 0, sizeof links);
+        flag = false;
+        fail = 0, postion = -1, in = ans = 0;
     }
-    for (int i = 0; i < maxbit; ++i) {
-        for (int j = 0; j < maxm; ++j) {
-            ++bit_cnt_3[i][i / pow_3[j] % 3];
-            bit_3[i][j] = i / pow_3[j] % 3;
+};
+void Insert_string(string str, Trie* p, int postion) {
+    for (auto vi : str) {
+        int ch = vi - 'a';
+        if (p->links[ch] == nullptr)
+            p->links[ch] = new Trie();
+        p = p->links[ch];
+    }
+    p->flag = true, p->postion = postion;
+}
+void Build_fail(Trie* root) {
+    queue<struct Trie*> qu;
+    qu.push(root);
+    while (!qu.empty()) {
+        auto first = qu.front();
+        qu.pop();
+        for (int i = 0; i < 26; ++i) {
+            if (first->links[i]) {
+                arr.push_back(first->links[i]);
+                qu.push(first->links[i]);
+                if (first == root)
+                    first->links[i]->fail = root;
+                else {
+                    auto father = first->fail;
+                    while (father) {
+                        if (father->links[i]) {
+                            first->links[i]->fail = father->links[i];
+                            ++first->links[i]
+                                  ->fail->in;  // fail 指向的节点入度 +1
+                            break;
+                        }
+                        father = father->fail;
+                    }
+                    if (father == nullptr)
+                        first->links[i]->fail = root;
+                }
+            }
         }
-    }
-    fac[0] = 1;
-    for (int i = 1; i < maxk; ++i) {
-        fac[i] = fac[i - 1] * i;
     }
 }
+void ac(string text, Trie* root) {
+    auto p = root;
+    for (auto vi : text) {
+        int ch = vi - 'a';
+        while (p && p->links[ch] == nullptr)
+            p = p->fail;
+        if (p == nullptr) {
+            p = root;
+            continue;
+        }
+        p = p->links[ch];
+        ++p->ans;
+    }
+}
+int main(void) {
+    ios::sync_with_stdio(false), cin.tie(nullptr), cout.tie(nullptr);
+    string str, text;
+    cin >> text;
+    int n;
+    cin >> n;
+    Trie A;
+    vector<int> postion(n + 1);
+    unordered_map<string, int> mp;
+    for (int i = 1; i <= n; ++i) {
+        cin >> str;
+        if (mp.count(str)) {
+            postion[i] = -mp[str];
+            continue;  // 如果该字符串之前插入了,那么 vector<i>
+                       // 记录之前该字符串的位置
+        }
+        mp.insert({str, i});
+        Insert_string(str, &A, i);
+    }
+    Build_fail(&A);
+    // cin >> text;//文本串
+    ac(text, &A);
 
-int main() {
-    ios::sync_with_stdio(false);
-
-    Init();
-    scanf("%d", &T);
-    while (T--) {
-        scanf("%d%d%d", &m, &n, &k);
-        for (int i = 0; i < m; ++i) {
-            scanf("%s", str[i] + 1);
-        }
-        for (int i = 0; i <= n; ++i) {
-            for (int j = 0; j < pow_3[m]; ++j) {
-                dp[i][j] = 0;
-            }
-        }
-        dp[0][0] = 1;
-        for (int i = 0; i < n; ++i) {
-            for (int j = 0; j < pow_3[m]; ++j) {
-                if (dp[i][j] == 0 || bit_cnt_3[j][2] > k) {
-                    continue;
-                }
-                int tmp = 0;
-                for (int kk = 0; kk < m; ++kk) {
-                    if (str[kk][i + 1] == '.') {
-                        continue;
-                    }
-                    if (bit_3[j][kk] == 0) {
-                        tmp += pow_3[kk];
-                    }
-                    if (bit_3[j][kk] != 2) {
-                        dp[i + 1][j + (2 - bit_3[j][kk]) * pow_3[kk]] +=
-                            dp[i][j];
-                    }
-                }
-                dp[i + 1][j + tmp] += dp[i][j];
-            }
-        }
-        memset(ans, 0, sizeof(ans));
-        for (int i = 0; i < pow_3[m]; ++i) {
-            if (bit_cnt_3[i][1] == 0) {
-                ans[bit_cnt_3[i][2]] += dp[n][i];
-            }
-        }
-        for (int i = 1; i <= k; ++i) {
-            __int128 Ans = (__int128)ans[i] * fac[i];
-            if (Ans > Limit) {
-                printf("%I64d%012I64d\n", (LL)(Ans / Limit), (LL)(Ans % Limit));
-            } else {
-                printf("%I64d\n", (LL)Ans);
-            }
-        }
+    // 拓扑排序
+    queue<Trie*> qu;
+    for (auto vi : arr)  // 入度为 0 的节点入队
+        if (!vi->in)
+            qu.push(vi);
+    while (!qu.empty()) {
+        auto tmp = qu.front();
+        qu.pop();
+        tmp->fail->ans += tmp->ans;
+        --tmp->fail->in;
+        if (tmp->flag)
+            postion[tmp->postion] += tmp->ans;
+        if (!tmp->fail->in)
+            qu.push(tmp->fail);
     }
 
+    for (int i = 1; i <= n; ++i) {
+        if (postion[i] < 0)  // 这个位置的字符串与 -postion[i] 位置的字符串相同
+            cout << postion[-postion[i]] << endl;
+        else
+            cout << postion[i] << endl;
+    }
     return 0;
 }
