@@ -1,121 +1,129 @@
-#include <cstring>
-#include <iostream>
-#include <queue>
-#include <string>
-#include <unordered_map>
-#include <vector>
+#include <bits/stdc++.h>
+#define int long long
+#define mid ((l + r) >> 1)
+#define ls (p << 1)
+#define rs (ls | 1)
 using namespace std;
-typedef struct Trie Trie;
-vector<Trie*> arr;  // 存入AC自动机中所有的节点
-struct Trie {
-    Trie* links[26];
-    Trie* fail;
-    bool flag;             // 记录是否是字符串
-    int postion, in, ans;  // postion 记录该字符串的位置 默认为 -1 , in
-                           // 为该节点的入度 ans 为距离
-    Trie() {
-        memset(links, 0, sizeof links);
-        flag = false;
-        fail = 0, postion = -1, in = ans = 0;
+const int N = 2e6 + 10, M = 5e2 + 10, V = 63, p = 13331, mod = 998244353,
+          md = 998244353, INF = 1e18;
+int n, m, k, a[N], b[N], c[N], d[N], in[N], to[N], mp[N];
+char s[N], t[N];
+namespace Fast_IO {
+static char buf[1000000], *paa = buf, *pd = buf, out[10000000];
+int length = 0;
+#define getchar()                                                              \
+    paa == pd && (pd = (paa = buf) + fread(buf, 1, 1000000, stdin), paa == pd) \
+        ? EOF                                                                  \
+        : *paa++
+inline int read() {
+    int x(0), t(1);
+    char fc(getchar());
+    while (!isdigit(fc)) {
+        if (fc == '-')
+            t = -1;
+        fc = getchar();
     }
-};
-void Insert_string(string str, Trie* p, int postion) {
-    for (auto vi : str) {
-        int ch = vi - 'a';
-        if (p->links[ch] == nullptr)
-            p->links[ch] = new Trie();
-        p = p->links[ch];
-    }
-    p->flag = true, p->postion = postion;
+    while (isdigit(fc))
+        x = (x << 1) + (x << 3) + (fc ^ 48), fc = getchar();
+    return x * t;
 }
-void Build_fail(Trie* root) {
-    queue<struct Trie*> qu;
-    qu.push(root);
-    while (!qu.empty()) {
-        auto first = qu.front();
-        qu.pop();
-        for (int i = 0; i < 26; ++i) {
-            if (first->links[i]) {
-                arr.push_back(first->links[i]);
-                qu.push(first->links[i]);
-                if (first == root)
-                    first->links[i]->fail = root;
-                else {
-                    auto father = first->fail;
-                    while (father) {
-                        if (father->links[i]) {
-                            first->links[i]->fail = father->links[i];
-                            ++first->links[i]
-                                  ->fail->in;  // fail 指向的节点入度 +1
-                            break;
-                        }
-                        father = father->fail;
-                    }
-                    if (father == nullptr)
-                        first->links[i]->fail = root;
-                }
-            }
-        }
+inline void flush() {
+    fwrite(out, 1, length, stdout);
+    length = 0;
+}
+inline void put(char c) {
+    if (length == 9999999)
+        flush();
+    out[length++] = c;
+}
+inline void put(string s) {
+    for (char c : s)
+        put(c);
+}
+inline void print(int x) {
+    if (x < 0)
+        put('-'), x = -x;
+    if (x > 9)
+        print(x / 10);
+    put(x % 10 + '0');
+}
+inline bool chk(char c) {
+    return !(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' ||
+             c >= '0' && c <= '9');
+}
+inline bool ck(char c) {
+    return c != '\n' && c != '\r' && c != -1 && c != ' ';
+}
+inline void rd(char s[], int& n) {
+    s[++n] = getchar();
+    while (chk(s[n]))
+        s[n] = getchar();
+    while (ck(s[n]))
+        s[++n] = getchar();
+    n--;
+}
+}  // namespace Fast_IO
+using namespace Fast_IO;
+inline void topo() {
+    queue<int> q;
+    for (int i = 'a'; i <= 'z'; i++)
+        if (in[i] == 0)
+            q.push(i);
+    while (!q.empty()) {
+        int u = q.front();
+        q.pop();
+        mp[u] = 1;
+        int v = to[u];
+        if (mp[v] == 0)
+            in[v] = 0, q.push(v);
     }
 }
-void ac(string text, Trie* root) {
-    auto p = root;
-    for (auto vi : text) {
-        int ch = vi - 'a';
-        while (p && p->links[ch] == nullptr)
-            p = p->fail;
-        if (p == nullptr) {
-            p = root;
-            continue;
-        }
-        p = p->links[ch];
-        ++p->ans;
-    }
+inline void dfs(int u) {
+    mp[u] = 1;
+    int v = to[u];
+    if (mp[v] == 0)
+        dfs(v);
 }
-int main(void) {
-    ios::sync_with_stdio(false), cin.tie(nullptr), cout.tie(nullptr);
-    string str, text;
-    cin >> text;
-    int n;
-    cin >> n;
-    Trie A;
-    vector<int> postion(n + 1);
-    unordered_map<string, int> mp;
-    for (int i = 1; i <= n; ++i) {
-        cin >> str;
-        if (mp.count(str)) {
-            postion[i] = -mp[str];
-            continue;  // 如果该字符串之前插入了,那么 vector<i>
-                       // 记录之前该字符串的位置
-        }
-        mp.insert({str, i});
-        Insert_string(str, &A, i);
-    }
-    Build_fail(&A);
-    // cin >> text;//文本串
-    ac(text, &A);
-
-    // 拓扑排序
-    queue<Trie*> qu;
-    for (auto vi : arr)  // 入度为 0 的节点入队
-        if (!vi->in)
-            qu.push(vi);
-    while (!qu.empty()) {
-        auto tmp = qu.front();
-        qu.pop();
-        tmp->fail->ans += tmp->ans;
-        --tmp->fail->in;
-        if (tmp->flag)
-            postion[tmp->postion] += tmp->ans;
-        if (!tmp->fail->in)
-            qu.push(tmp->fail);
-    }
-
-    for (int i = 1; i <= n; ++i) {
-        if (postion[i] < 0)  // 这个位置的字符串与 -postion[i] 位置的字符串相同
-            cout << postion[-postion[i]] << endl;
+inline void solve() {
+    read();
+    rd(s, n);
+    n = 0;
+    rd(t, n);
+    set<char> st;
+    for (int i = 1; i <= n; i++) {
+        if (to[s[i]] == 0 || to[s[i]] == t[i])
+            to[s[i]] = t[i];
         else
-            cout << postion[i] << endl;
+            return put("-1\n");
+        st.emplace(t[i]);
     }
+    if (st.size() == 26) {
+        for (int i = 1; i <= n; i++)
+            if (s[i] != t[i])
+                return put("-1\n");
+        return put("0\n");
+    }
+    int ans = 0;
+    memset(to, 0, sizeof to);
+    for (int i = 1; i <= n; i++)
+        if (to[s[i]] == 0 && s[i] != t[i]) {
+            to[s[i]] = t[i];
+            in[t[i]]++;
+            ans++;
+        }
+    topo();
+    for (int i = 'a'; i <= 'z'; ++i)
+        if (mp[i] == 0)
+            ans++, dfs(i);
+    print(ans);
+    put('\n');
+}
+signed main() {
+    int T = 1;
+    // T=read();
+    while (T--)
+        solve();
+genshin:;
+    flush();
     return 0;
 }

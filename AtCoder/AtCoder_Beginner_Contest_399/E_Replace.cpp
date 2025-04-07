@@ -7,16 +7,18 @@ int n, ans;
 string s, t;
 bool vis[maxn];
 int G[maxn][maxn];
-int degOut[maxn], fa[maxn], cnt[maxn];
+int degOut[maxn], fa[maxn], cnt[maxn], degIn[maxn];
 
 void build() {
     memset(degOut, 0, sizeof(degOut));
+    memset(degIn, 0, sizeof(degIn));
     for (int i = 0; i < n; ++i) {
         fa[i] = i;
         cnt[i] = 1;
         for (int j = 0; j < n; ++j) {
             if (G[i][j]) {
                 ++degOut[i];
+                ++degIn[j];
             }
         }
     }
@@ -26,6 +28,7 @@ void clearSelfLoop() {
     for (int i = 0; i < n; ++i) {
         if (G[i][i] == 1) {
             --degOut[i];
+            --degIn[i];
         }
     }
 }
@@ -69,8 +72,6 @@ int main() {
     for (int i = 0; i < s.length(); ++i) {
         G[id(s[i])][id(t[i])] = 1;
     }
-    // 1. 如果有环，就看有没有孤立点，如果有孤立点，就有解，否则无解
-    // 其它情况，就可以正常算了，有环就 +1，否则就是边数
     build();
     for (int i = 0; i < n; ++i) {
         if (degOut[i] > 1) {
@@ -84,19 +85,28 @@ int main() {
     for (int i = 0; i < n; ++i) {
         int f = findF(i);
         if (degOut[f] == cnt[f]) {
-            hasLoop = true;
-            break;
+            bool allInOne = true;
+            for (int j = 0; j < n; ++j) {
+                if (findF(j) == f && degIn[j] != 1) {
+                    allInOne = false;
+                    break;
+                }
+            }
+            if (allInOne) {
+                hasLoop = true;
+                break;
+            }
         }
     }
     build();
-    bool zeroOut = false;
+    bool zeroIn = false;
     for (int i = 0; i < n; ++i) {
-        if (degOut[i] == 0) {
-            zeroOut = true;
+        if (degIn[i] == 0) {
+            zeroIn = true;
             break;
         }
     }
-    if (hasLoop && !zeroOut) {
+    if (hasLoop && !zeroIn) {
         cout << -1 << endl;
         return 0;
     }
@@ -111,7 +121,14 @@ int main() {
         }
         vis[f] = true;
         ans += degOut[f];
-        if (degOut[f] == cnt[f]) {
+        bool allInOne = true;
+        for (int j = 0; j < n; ++j) {
+            if (findF(j) == f && degIn[j] != 1) {
+                allInOne = false;
+                break;
+            }
+        }
+        if (allInOne) {
             ++ans;
         }
     }
