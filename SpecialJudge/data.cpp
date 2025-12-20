@@ -32,13 +32,13 @@ int main() {
     ios::sync_with_stdio(false);
     srand(time(0));
 
-    cout << 1 << endl;
-    int n = getRand(1, 5);
-    int k = getRand(1, 5);
-    cout << n << " " << k << endl;
+    int n = getRand(8, 10);
+    int m = getRand(n + 1, 20);
+    cout << n << " " << m << endl;
     for (int i = 1; i <= n; ++i) {
-        cout << getRand(1, 5) << " " << getRand(1, 5) << endl;
+        cout << getRand(1, 1000) << " ";
     }
+    cout << endl;
 
     return 0;
 }

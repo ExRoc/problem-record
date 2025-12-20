@@ -1,37 +1,57 @@
-#include <iostream>
-#include <map>
-#define int long long
+#include <bits/stdc++.h>
 using namespace std;
-int n, k, sum, cnt, res, f[3];
-map<int, int> t;
-void sol() {
-    cin >> n >> k, k--, sum = res = cnt = f[1] = f[2] = 0, t.clear();
-    for (int i = 1, x, y; i <= n; i++)
-        cin >> x >> y, t[x] += y;
-    for (auto te : t) {
-        int x = te.second;
-        sum += x / 3;
-        if (x <= 2)
-            res += x;
-        else
-            res += 2, cnt += ((x - 2) / 3), f[(x - 2) % 3]++;
+
+typedef long long LL;
+const int maxn = 1000 + 100;
+int n, m, ans;
+int d[maxn];
+vector<int> dd;
+int dp[maxn][maxn][2];
+
+int solve(vector<int>& d) {
+    memset(dp, -1, sizeof(dp));
+    dp[0][0][0] = 0;
+    int n = d.size() - 1;
+    for (int i = 1; i <= n; ++i) {
+        int top = min((i + 1) / 2, m);
+        dp[i][0][0] = 0;
+        for (int j = 1; j <= top; ++j) {
+            dp[i][j][0] = max(dp[i - 1][j][0], dp[i - 1][j][1]);
+            if (dp[i - 1][j - 1][0] != -1) {
+                dp[i][j][1] = dp[i - 1][j - 1][0] + d[i];
+            }
+        }
     }
-    if (sum < k) {
-        cout << -1 << '\n';
-        return;
-    }
-    cnt = min(cnt, k), res += cnt * 3, k -= cnt;
-    for (int i = 2; i >= 1; i--) {
-        int tx = min(f[i], k);
-        k -= tx, res += tx * i;
-    }
-    cout << res + 1 << '\n';
+    int top = min((n + 1) / 2, m);
+    return max(dp[n][top][0], dp[n][top][1]);
 }
-signed main() {
-    ios::sync_with_stdio(false), cin.tie(0), cout.tie(0);
-    int TT;
-    cin >> TT;
-    while (TT--)
-        sol();
+
+int main() {
+#ifdef ExRoc
+    freopen("test.txt", "r", stdin);
+#endif  // ExRoc
+    ios::sync_with_stdio(false);
+
+    cin >> n >> m;
+    for (int i = 1; i <= n; ++i) {
+        cin >> d[i];
+    }
+    if (n == 1) {
+        cout << d[1] << endl;
+        return 0;
+    }
+    dd.push_back(0);
+    for (int i = 1; i < n; ++i) {
+        dd.push_back(d[i]);
+    }
+    ans = solve(dd);
+    dd.clear();
+    dd.push_back(0);
+    for (int i = 2; i <= n; ++i) {
+        dd.push_back(d[i]);
+    }
+    ans = max(ans, solve(dd));
+    cout << ans << endl;
+
     return 0;
 }

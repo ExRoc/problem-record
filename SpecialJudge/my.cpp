@@ -1,56 +1,72 @@
-#include <bits/stdc++.h>
+#include <algorithm>
+#include <iostream>
 using namespace std;
 
-typedef long long LL;
-const int maxn = 200000 + 100;
-int T, n, a, b;
-LL k, ans, tmp;
-map<int, LL> mp, mmp;
-map<int, LL>::iterator it;
-vector<pair<int, LL>> vct;
+#define MAX_HOUSE 10001
+#define MAX_STEAL 10001
 
-bool cmp(const pair<int, LL>& a, const pair<int, LL>& b) {
-    return a.second > b.second;
+int nums[MAX_HOUSE];
+int dp[MAX_HOUSE][MAX_STEAL];
+
+int maxLinearValue(int start, int len, int max_k) {
+    if (len == 0)
+        return 0;
+
+    for (int i = 0; i <= len; ++i) {
+        dp[i][0] = 0;
+    }
+    for (int k = 0; k <= max_k; ++k) {
+        dp[0][k] = 0;
+    }
+
+    dp[1][1] = nums[start];
+
+    for (int k = 2; k <= max_k; ++k) {
+        dp[1][k] = 0;
+    }
+
+    for (int i = 2; i <= len; ++i) {
+        int current_house = start + i - 1;
+        for (int k = 1; k <= min(i, max_k); ++k) {
+            dp[i][k] = dp[i - 1][k];
+
+            if (i >= 2) {
+                dp[i][k] =
+                    max(dp[i][k], dp[i - 2][k - 1] + nums[current_house]);
+            } else {
+                dp[i][k] = max(dp[i][k], nums[current_house]);
+            }
+        }
+
+        for (int k = i + 1; k <= max_k; ++k) {
+            dp[i][k] = 0;
+        }
+    }
+
+    int res = 0;
+    for (int k = 0; k <= max_k; ++k) {
+        res = max(res, dp[len][k]);
+    }
+    return res;
 }
 
 int main() {
-#ifdef ExRoc
-    freopen("test.txt", "r", stdin);
-#endif  // ExRoc
-    ios::sync_with_stdio(false);
+    int n, m;
+    cin >> n >> m;
 
-    cin >> T;
-    while (T--) {
-        mp.clear();
-        mmp.clear();
-        vct.clear();
-        cin >> n >> k;
-        --k;
-        for (int i = 1; i <= n; ++i) {
-            cin >> a >> b;
-            mp[a] += b;
-        }
-        tmp = 0;
-        for (it = mp.begin(); it != mp.end(); ++it) {
-            tmp += it->second / 3;
-            vct.push_back(*it);
-        }
-        if (tmp < k) {
-            cout << -1 << endl;
-            continue;
-        }
-        sort(vct.begin(), vct.end(), cmp);
-        for (pair<int, LL> p : vct) {
-            tmp = min(p.second / 3, k);
-            mmp[p.first] = min(tmp * 3 + 2, p.second);
-            k -= tmp;
-        }
-        ans = 1;
-        for (it = mmp.begin(); it != mmp.end(); ++it) {
-            ans += it->second;
-        }
-        cout << ans << endl;
+    for (int i = 1; i <= n; ++i) {
+        cin >> nums[i];
     }
 
+    if (n == 1) {
+        cout << (m >= 1 ? nums[1] : 0) << endl;
+        return 0;
+    }
+
+    int res1 = maxLinearValue(2, n - 1, m);
+
+    int res2 = maxLinearValue(1, n - 1, m);
+
+    cout << max(res1, res2) << endl;
     return 0;
 }
