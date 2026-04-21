@@ -12,13 +12,9 @@ string numToStr(int x) {
     return str;
 }
 
-string getFileInName(int index) {
-    return "data/" + numToStr(index) + ".in";
-}
+string getFileInName(int index) { return "data/" + numToStr(index) + ".in"; }
 
-string getFileOutName(int index) {
-    return "data/" + numToStr(index) + ".out";
-}
+string getFileOutName(int index) { return "data/" + numToStr(index) + ".out"; }
 
 LL getRand(LL l, LL r) {
     LL rnd = rand();
@@ -32,11 +28,17 @@ int main() {
     ios::sync_with_stdio(false);
     srand(time(0));
 
-    int n = getRand(8, 10);
-    int m = getRand(n + 1, 20);
-    cout << n << " " << m << endl;
-    for (int i = 1; i <= n; ++i) {
-        cout << getRand(1, 1000) << " ";
+    int n = getRand(2, 10);
+    cout << n << endl;
+    for (int i = 0; i < n; ++i) {
+        int x = getRand(0, 2);
+        if (x == 0) {
+            cout << 'Q';
+        } else if (x == 1) {
+            cout << 'L';
+        } else {
+            cout << '?';
+        }
     }
     cout << endl;
 
