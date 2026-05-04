@@ -27,9 +27,6 @@ int main() {
             }
             if (flag && sum >= k) {
                 ans = min(ans, 2 * (j - i + 1) - 1 - (int)que2.size());
-                // cout << "i = " << i << " j = " << j
-                //      << " ans = " << 2 * (j - i + 1) - 1 - (int)que2.size()
-                //      << endl;
             }
         }
     }

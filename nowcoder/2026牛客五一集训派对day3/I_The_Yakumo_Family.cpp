@@ -25,10 +25,6 @@ int main() {
         }
         dp1Sum[i] = (dp1Sum[i - 1] + dp1Sum[i]) % MOD;
     }
-    // for (int i = 1; i <= n; ++i) {
-    //     cout << dp1Sum[i] << " ";
-    // }
-    // cout << '\n';
     vector<vector<long long>> dp2Bit(Log, vector<long long>(n + 1, 0));
     vector<long long> dp2Sum(n + 1, 0);
     long long sum = 0;
@@ -44,16 +40,6 @@ int main() {
         }
         dp2Sum[i] = (dp2Sum[i] + dp2Sum[i - 1]) % MOD;
     }
-    // for (int i = 1; i <= n; ++i) {
-    //     for (int j = 0; j < 2; ++j) {
-    //         cout << dp2Bit[j][i] << " ";
-    //     }
-    //     cout << '\n';
-    // }
-    // for (int i = 1; i <= n; ++i) {
-    //     cout << dp2Sum[i] << " ";
-    // }
-    // cout << '\n';
     sum = 0;
     vector<vector<long long>> dp3Bit(Log, vector<long long>(n + 1, 0));
     vector<long long> dp3Sum(n + 1, 0);
@@ -69,10 +55,6 @@ int main() {
         }
         dp3Sum[i] = (dp3Sum[i] + dp3Sum[i - 1]) % MOD;
     }
-    // for (int i = 1; i <= n; ++i) {
-    //     cout << dp3Sum[i] << " ";
-    // }
-    // cout << '\n';
     cout << dp3Sum[n] << '\n';
 
     return 0;
