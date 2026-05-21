@@ -28,19 +28,23 @@ int main() {
     ios::sync_with_stdio(false);
     srand(time(0));
 
-    int n = getRand(2, 10);
-    cout << n << endl;
-    for (int i = 0; i < n; ++i) {
-        int x = getRand(0, 2);
-        if (x == 0) {
-            cout << 'Q';
-        } else if (x == 1) {
-            cout << 'L';
-        } else {
-            cout << '?';
+    int T = getRand(1, 1);
+    cout << T << '\n';
+    while (T--) {
+        int n = getRand(1, 5);
+        cout << n << '\n';
+        for (int i = 0; i < n; ++i) {
+            cout << getRand(-10, 10) << " ";
+        }
+        cout << '\n';
+        for (int i = 0; i < n; ++i) {
+            cout << getRand(0, 1);
+        }
+        cout << '\n';
+        for (int i = 2; i <= n; ++i) {
+            cout << i << " " << getRand(1, i - 1) << '\n';
         }
     }
-    cout << endl;
 
     return 0;
 }
