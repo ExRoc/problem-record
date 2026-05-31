@@ -1,57 +1,71 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-long long dfs(int root, int fa, vector<vector<int>>& G, int status,
-              vector<long long>& a, string& s) {
-    long long sum = 0;
-    int bit = 0;
-    for (int pos : G[root]) {
-        if (pos == fa) {
-            continue;
-        }
-        sum += dfs(pos, root, G, status, a, s);
-        bit |= ((status >> pos) & 1);
-    }
-    if ((bit == 1 && s[root] == '1') || ((status >> root) && 1) == 1) {
-        sum += a[root];
-    }
-    return sum;
-}
+template <class T>
+struct FenwickTree {
+   public:
+    FenwickTree() : n_(0) {}
+    explicit FenwickTree(int n) : n_(n), data_(n) {}
 
-long long solve(int status, int n, vector<vector<int>>& G, vector<long long>& a,
-                string& s) {
-    return dfs(0, 0, G, status, a, s);
-}
+    void Add(int p, T x) {
+        assert(0 <= p && p < n_);
+        ++p;
+        while (p <= n_) {
+            data_[p - 1] += x;
+            p += p & -p;
+        }
+    }
+
+    T Sum(int l, int r) {
+        assert(0 <= l && l <= r && r <= n_);
+        return Sum(r) - Sum(l);
+    }
+
+   private:
+    int n_;
+    vector<T> data_;
+
+    T Sum(int r) {
+        T s = 0;
+        while (r > 0) {
+            s += data_[r - 1];
+            r -= r & -r;
+        }
+        return s;
+    }
+};
 
 int main() {
     ios::sync_with_stdio(false);
 
-    int T;
-    cin >> T;
-    while (T--) {
-        int n;
-        cin >> n;
-        vector<long long> a(n);
-        for (int i = 0; i < n; ++i) {
-            cin >> a[i];
+    int N, Q;
+    cin >> N >> Q;
+    map<int, int> cnts;
+    cnts[0] = N;
+    const int maxn = 300000 + 100;
+    FenwickTree<int> tree(maxn);
+    tree.Add(0, N);
+    vector<int> nums(N + 1, 0);
+    while (Q--) {
+        int cmd;
+        cin >> cmd;
+        if (cmd == 1) {
+            int x;
+            cin >> x;
+            tree.Add(nums[x], -1);
+            --cnts[nums[x]];
+            if (cnts[nums[x]] == 0) {
+                cnts.erase(nums[x]);
+            }
+            ++nums[x];
+            ++cnts[nums[x]];
+            tree.Add(nums[x], 1);
+        } else {
+            int y;
+            cin >> y;
+            y += cnts.begin()->first;
+            cout << tree.Sum(y, maxn) << '\n';
         }
-        string s;
-        cin >> s;
-        vector<vector<int>> G(n);
-        for (int i = 1; i < n; ++i) {
-            int u, v;
-            cin >> u >> v;
-            --u;
-            --v;
-            G[u].push_back(v);
-            G[v].push_back(u);
-        }
-        long long ans = 0;
-        for (int i = 0; i < (1 << n); ++i) {
-            long long ansTmp = solve(i, n, G, a, s);
-            ans = max(ans, ansTmp);
-        }
-        cout << ans << '\n';
     }
 
     return 0;
