@@ -1,176 +1,283 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-template <int MOD>
-class ModInt {
+template <class S, S (*op)(S, S), S (*e)(), class F, S (*mapping)(F, S),
+          F (*composition)(F, F), F (*id)()>
+class LazySegtree {
    public:
-    constexpr ModInt(long long v = 0) : val_(v % MOD) {
-        if (val_ < 0) {
-            val_ += MOD;
+    LazySegtree() : LazySegtree(0) {}
+    explicit LazySegtree(int n) : LazySegtree(vector<S>(n, e())) {}
+    explicit LazySegtree(const vector<S>& v) : n_(int(v.size())) {
+        size_ = BitCeil(static_cast<unsigned int>(n_));
+        log_ = CountrZero(static_cast<unsigned int>(size_));
+        data_ = vector<S>(2 * size_, e());
+        lazy_ = vector<F>(size_, id());
+        for (int i = 0; i < n_; ++i) {
+            data_[size_ + i] = v[i];
+        }
+        for (int i = size_ - 1; i >= 1; --i) {
+            Update(i);
         }
     }
 
-    constexpr int value() const { return val_; }
-
-    static constexpr int mod() { return MOD; }
-
-    constexpr ModInt pow(long long n) const {
-        ModInt res = 1;
-        ModInt a = *this;
-        if (n < 0) {
-            a = a.inv();
-            n = -n;
+    void Set(int p, S x) {
+        assert(0 <= p && p < n_);
+        p += size_;
+        for (int i = log_; i >= 1; --i) {
+            Push(p >> i);
         }
-        while (n) {
-            if (n & 1) {
-                res *= a;
+        data_[p] = x;
+        for (int i = 1; i <= log_; ++i) {
+            Update(p >> i);
+        }
+    }
+
+    S Get(int p) {
+        assert(0 <= p && p < n_);
+        p += size_;
+        for (int i = log_; i >= 1; --i) {
+            Push(p >> i);
+        }
+        return data_[p];
+    }
+
+    S Prod(int l, int r) {
+        assert(0 <= l && l <= r && r <= n_);
+        if (l == r) {
+            return e();
+        }
+        l += size_;
+        r += size_;
+        for (int i = log_; i >= 1; --i) {
+            if (((l >> i) << i) != l) {
+                Push(l >> i);
             }
-            a *= a;
-            n >>= 1;
+            if (((r >> i) << i) != r) {
+                Push((r - 1) >> i);
+            }
         }
-        return res;
-    }
-
-    constexpr ModInt inv() const { return pow(MOD - 2); }
-
-    constexpr ModInt operator-() const { return ModInt(-val_); }
-
-    constexpr ModInt& operator+=(const ModInt& rhs) {
-        val_ += rhs.val_;
-        if (val_ >= MOD) {
-            val_ -= MOD;
+        S sml = e(), smr = e();
+        while (l < r) {
+            if (l & 1) {
+                sml = op(sml, data_[l++]);
+            }
+            if (r & 1) {
+                smr = op(data_[--r], smr);
+            }
+            l >>= 1;
+            r >>= 1;
         }
-        return *this;
+        return op(sml, smr);
     }
 
-    constexpr ModInt& operator-=(const ModInt& rhs) {
-        val_ -= rhs.val_;
-        if (val_ < 0) {
-            val_ += MOD;
+    S AllProd() { return data_[1]; }
+
+    void Apply(int p, F f) {
+        assert(0 <= p && p < n_);
+        p += size_;
+        for (int i = log_; i >= 1; --i) {
+            Push(p >> i);
         }
-        return *this;
+        data_[p] = mapping(f, data_[p]);
+        for (int i = 1; i <= log_; ++i) {
+            Update(p >> i);
+        }
     }
 
-    constexpr ModInt& operator*=(const ModInt& rhs) {
-        val_ = static_cast<long long>(val_) * rhs.val_ % MOD;
-        return *this;
+    void Apply(int l, int r, F f) {
+        assert(0 <= l && l <= r && r <= n_);
+        if (l == r) {
+            return;
+        }
+        l += size_;
+        r += size_;
+        for (int i = log_; i >= 1; --i) {
+            if (((l >> i) << i) != l) {
+                Push(l >> i);
+            }
+            if (((r >> i) << i) != r) {
+                Push((r - 1) >> i);
+            }
+        }
+        {
+            int l2 = l, r2 = r;
+            while (l < r) {
+                if (l & 1) {
+                    AllApply(l++, f);
+                }
+                if (r & 1) {
+                    AllApply(--r, f);
+                }
+                l >>= 1;
+                r >>= 1;
+            }
+            l = l2;
+            r = r2;
+        }
+        for (int i = 1; i <= log_; ++i) {
+            if (((l >> i) << i) != l) {
+                Update(l >> i);
+            }
+            if (((r >> i) << i) != r) {
+                Update((r - 1) >> i);
+            }
+        }
     }
 
-    constexpr ModInt& operator/=(const ModInt& rhs) {
-        return *this *= rhs.inv();
+    template <class G>
+    int MaxRight(int l, G g) {
+        assert(0 <= l && l <= n_);
+        assert(g(e()));
+        if (l == n_) {
+            return n_;
+        }
+        l += size_;
+        for (int i = log_; i >= 1; --i) {
+            Push(l >> i);
+        }
+        S sm = e();
+        do {
+            while (l % 2 == 0) {
+                l >>= 1;
+            }
+            if (!g(op(sm, data_[l]))) {
+                while (l < size_) {
+                    Push(l);
+                    l = 2 * l;
+                    if (g(op(sm, data_[l]))) {
+                        sm = op(sm, data_[l]);
+                        ++l;
+                    }
+                }
+                return l - size_;
+            }
+            sm = op(sm, data_[l]);
+            ++l;
+        } while ((l & -l) != l);
+        return n_;
     }
 
-    constexpr ModInt& operator++() { return *this += 1; }
-
-    constexpr ModInt operator++(int) {
-        ModInt old = *this;
-        ++(*this);
-        return old;
+    template <bool (*g)(S)>
+    int MaxRight(int l) {
+        return MaxRight(l, [](S x) { return g(x); });
     }
 
-    constexpr ModInt& operator--() { return *this -= 1; }
-
-    constexpr ModInt operator--(int) {
-        ModInt old = *this;
-        --(*this);
-        return old;
+    template <class G>
+    int MinLeft(int r, G g) {
+        assert(0 <= r && r <= n_);
+        assert(g(e()));
+        if (r == 0) {
+            return 0;
+        }
+        r += size_;
+        for (int i = log_; i >= 1; --i) {
+            Push((r - 1) >> i);
+        }
+        S sm = e();
+        do {
+            --r;
+            while (r > 1 && (r % 2)) {
+                r >>= 1;
+            }
+            if (!g(op(data_[r], sm))) {
+                while (r < size_) {
+                    Push(r);
+                    r = 2 * r + 1;
+                    if (g(op(data_[r], sm))) {
+                        sm = op(data_[r], sm);
+                        --r;
+                    }
+                }
+                return r + 1 - size_;
+            }
+            sm = op(data_[r], sm);
+        } while ((r & -r) != r);
+        return 0;
     }
 
-    friend constexpr ModInt operator+(ModInt a, const ModInt& b) {
-        return a += b;
-    }
-
-    friend constexpr ModInt operator-(ModInt a, const ModInt& b) {
-        return a -= b;
-    }
-
-    friend constexpr ModInt operator*(ModInt a, const ModInt& b) {
-        return a *= b;
-    }
-
-    friend constexpr ModInt operator/(ModInt a, const ModInt& b) {
-        return a /= b;
-    }
-
-    friend constexpr bool operator==(const ModInt& a, const ModInt& b) {
-        return a.val_ == b.val_;
-    }
-
-    friend constexpr bool operator!=(const ModInt& a, const ModInt& b) {
-        return a.val_ != b.val_;
-    }
-
-    friend constexpr ModInt operator+(long long x, const ModInt& m) {
-        return ModInt(x) + m;
-    }
-
-    friend constexpr ModInt operator-(long long x, const ModInt& m) {
-        return ModInt(x) - m;
-    }
-
-    friend constexpr ModInt operator*(long long x, const ModInt& m) {
-        return ModInt(x) * m;
-    }
-
-    friend constexpr ModInt operator/(long long x, const ModInt& m) {
-        return ModInt(x) / m;
-    }
-
-    friend std::ostream& operator<<(std::ostream& os, const ModInt& m) {
-        return os << m.val_;
-    }
-
-    friend std::istream& operator>>(std::istream& is, ModInt& m) {
-        long long x;
-        is >> x;
-        m = ModInt(x);
-        return is;
+    template <bool (*g)(S)>
+    int MinLeft(int r) {
+        return MinLeft(r, [](S x) { return g(x); });
     }
 
    private:
-    int val_;
+    int n_, size_, log_;
+    vector<S> data_;
+    vector<F> lazy_;
+
+    static unsigned int BitCeil(unsigned int n) {
+        unsigned int x = 1;
+        while (x < n) {
+            x <<= 1;
+        }
+        return x;
+    }
+
+    static int CountrZero(unsigned int n) {
+        if (n == 0) {
+            return 32;
+        }
+        return __builtin_ctz(n);
+    }
+
+    void Update(int k) { data_[k] = op(data_[2 * k], data_[2 * k + 1]); }
+
+    void AllApply(int k, F f) {
+        data_[k] = mapping(f, data_[k]);
+        if (k < size_) {
+            lazy_[k] = composition(f, lazy_[k]);
+        }
+    }
+
+    void Push(int k) {
+        AllApply(2 * k, lazy_[k]);
+        AllApply(2 * k + 1, lazy_[k]);
+        lazy_[k] = id();
+    }
 };
 
-typedef ModInt<1000000007> modint;
+long long op(long long s1, long long s2) { return max(s1, s2); }
 
-modint C(long long n, int m) {
-    if (n < m || n < 0 || m < 0) {
-        return 0;
+long long e() { return -1000000000001LL; }
+
+long long mapping(long long f, long long s) { return s + f; }
+
+long long composition(long long f1, long long f2) { return f1 + f2; }
+
+long long id() { return 0; }
+
+class Solution {
+   public:
+    long long maximumSum(vector<int>& nums, int m, int l, int r) {
+        int n = nums.size();
+        vector<
+            LazySegtree<long long, op, e, long long, mapping, composition, id>>
+            dp(m + 1, LazySegtree<long long, op, e, long long, mapping,
+                                  composition, id>(n + 1));
+        for (int i = 0; i <= n; ++i) {
+            dp[0].Set(i, 0);
+        }
+        for (int i = 1; i <= n; ++i) {
+            for (int j = 1; j <= m; ++j) {
+                int ll = max(i - r, 0);
+                int rr = max(i - l, 0);
+                dp[j - 1].Apply(ll, i, nums[i - 1]);
+                if (i < l) {
+                    continue;
+                }
+                dp[j].Set(i, max(dp[j].Get(i - 1), dp[j - 1].Prod(ll, rr + 1)));
+            }
+        }
+        long long ans = e();
+        for (int i = 1; i <= m; ++i) {
+            ans = max(ans, dp[i].Get(n));
+        }
+        return ans;
     }
-    modint ans = 1;
-    for (int i = 0; i < m; ++i) {
-        ans = ans * (n - i) / (i + 1);
-    }
-    return ans;
-}
+};
 
 int main() {
     ios::sync_with_stdio(false);
-
-    int t;
-    cin >> t;
-    while (t--) {
-        int N, S;
-        cin >> N >> S;
-        vector<int> Ls(N);
-        for (int i = 0; i < N; ++i) {
-            cin >> Ls[i];
-        }
-        modint ans = 0;
-        for (int mask = 0; mask < (1 << N); ++mask) {
-            int f = 1;
-            long long STmp = S;
-            for (int i = 0; i < N; ++i) {
-                if (((mask >> i) & 1) == 0) {
-                    continue;
-                }
-                f *= -1;
-                STmp -= Ls[i] + 1;
-            }
-            ans += f * C(STmp + N - 1, N - 1);
-        }
-        cout << ans << '\n';
-    }
 
     return 0;
 }
