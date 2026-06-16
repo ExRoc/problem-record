@@ -28,8 +28,14 @@ int main() {
             long long c;
             cin >> s >> c;
             pair<long long, long long> pTmp = cal(s, c);
-            if (mp.find(s) == mp.end()) {
+            map<char, pair<int, pair<long long, long long>>>::iterator it =
+                mp.find(s);
+            if (it == mp.end()) {
                 mp[s] = {i, pTmp};
+            } else {
+                if ((it->second).second.first < pTmp.first) {
+                    it->second = {i, pTmp};
+                }
             }
         }
         bool flag = true;
@@ -42,7 +48,7 @@ int main() {
             bool f = false;
             for (auto [ss, pp] : mp) {
                 if (pp.second.first >= pTmp.first &&
-                    pp.second.first >= pTmp.second) {
+                    pp.second.second >= pTmp.second) {
                     f = true;
                     ans.push_back(pp.first);
                     break;
