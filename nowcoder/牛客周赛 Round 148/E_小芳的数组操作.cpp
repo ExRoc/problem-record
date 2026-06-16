@@ -33,7 +33,6 @@ long long solve(const vector<int>& a, int bit, int n) {
     } while (idx != first);
     int ans2 = 0;
     idx = next[first];
-
     do {
         ans2 += (next[idx] - idx + n) % n;
         idx = next[next[idx]];
