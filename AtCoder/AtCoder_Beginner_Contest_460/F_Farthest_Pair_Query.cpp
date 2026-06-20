@@ -261,26 +261,26 @@ int main() {
         G[V].push_back(U);
     }
     lca = LCA(G);
-    vector<Node> nodes(N);
+    vector<Node> nodes(N + 1);
     for (int i = 1; i <= N; ++i) {
-        nodes[i - 1].u = i;
+        nodes[i].u = i;
     }
     SegTree<Node, op, e> segTree(nodes);
     int Q;
     cin >> Q;
-    vector<int> xs(N);
+    vector<int> xs(N + 1);
     for (int i = 1; i <= N; ++i) {
-        xs[i - 1] = i;
+        xs[i] = i;
     }
     while (Q--) {
         int x;
         cin >> x;
-        if (xs[x - 1] == x) {
-            xs[x - 1] = 0;
+        if (xs[x] == x) {
+            xs[x] = 0;
         } else {
-            xs[x - 1] = x;
+            xs[x] = x;
         }
-        segTree.Set(x - 1, Node(xs[x - 1], 0, 0));
+        segTree.Set(x, Node(xs[x], 0, 0));
         cout << segTree.AllProd().d << '\n';
     }
 
