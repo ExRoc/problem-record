@@ -1,17 +1,51 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-struct Node {
-    int cnt, idx;
-
-    Node() {}
-
-    Node(int cnt, int idx) : cnt(cnt), idx(idx) {}
-
-    bool operator<(const Node& other) const {
-        return cnt == other.cnt ? idx < other.idx : cnt > other.cnt;
+void addI(vector<int>& cnt, int x, int s, int& idxI, int& idxE) {
+    if (idxI >= x) {
+        return;
     }
-};
+    ++cnt[idxI];
+    ++idxI;
+    if (cnt[idxI - 1] == s) {
+        idxE = idxI;
+    }
+}
+
+void addE(vector<int>& cnt, int x, int s, int& idxI, int& idxE) {
+    if (idxE >= idxI) {
+        return;
+    }
+    ++cnt[idxE];
+    if (cnt[idxE] == s) {
+        ++idxE;
+    }
+}
+
+int solve(int cntA, const string& AEI, int x, int s) {
+    int idxI = 0;
+    int idxE = 0;
+    vector<int> cnt(x, 0);
+    for (char ch : AEI) {
+        if (ch == 'I') {
+            addI(cnt, x, s, idxI, idxE);
+        } else if (ch == 'E') {
+            addE(cnt, x, s, idxI, idxE);
+        } else {
+            if (cntA > 0) {
+                addI(cnt, x, s, idxI, idxE);
+                --cntA;
+            } else {
+                addE(cnt, x, s, idxI, idxE);
+            }
+        }
+    }
+    int ans = 0;
+    for (int i = 0; i < x; ++i) {
+        ans += cnt[i];
+    }
+    return ans;
+}
 
 int main() {
     ios::sync_with_stdio(false);
@@ -24,107 +58,26 @@ int main() {
         cin >> n >> x >> s;
         string AEI;
         cin >> AEI;
-        set<int> emptyIdx;
-        for (int i = 0; i < x; ++i) {
-            emptyIdx.insert(i);
-        }
-        vector<int> cnt(x, 0);
-        vector<int> freeACnt(x, 0);
-        set<Node> notEmptyNotFullIdx;
-        set<Node> containsFreeAIdx;
-        set<Node> notFullIdx;
-        for (int i = 0; i < x; ++i) {
-            notFullIdx.insert(Node(0, i));
-        }
+        int cntA = 0;
         for (char ch : AEI) {
-            if (ch == 'I') {
-                if (!emptyIdx.empty()) {
-                    int idx = *emptyIdx.begin();
-                    emptyIdx.erase(idx);
-                    ++cnt[idx];
-                    notFullIdx.erase(Node(0, idx));
-                    if (cnt[idx] < s) {
-                        notEmptyNotFullIdx.insert(Node(1, idx));
-                        notFullIdx.insert(Node(1, idx));
-                    }
-                    continue;
-                }
-            } else if (ch == 'E') {
-                if (!notEmptyNotFullIdx.empty()) {
-                    Node oldNode = *notEmptyNotFullIdx.begin();
-                    Node newNode = Node(oldNode.cnt + 1, oldNode.idx);
-                    ++cnt[oldNode.idx];
-                    notEmptyNotFullIdx.erase(oldNode);
-                    if (newNode.cnt < s) {
-                        notEmptyNotFullIdx.insert(newNode);
-                    }
-                    if (containsFreeAIdx.find(oldNode) !=
-                        containsFreeAIdx.end()) {
-                        containsFreeAIdx.erase(oldNode);
-                        containsFreeAIdx.insert(newNode);
-                    }
-                    notFullIdx.erase(oldNode);
-                    if (newNode.cnt < s) {
-                        notFullIdx.insert(newNode);
-                    }
-                    continue;
-                }
-                if (!emptyIdx.empty() && !containsFreeAIdx.empty()) {
-                    Node oldNode = *containsFreeAIdx.begin();
-                    Node newNode = Node(oldNode.cnt - 1, oldNode.idx);
-                    int eIdx = *emptyIdx.begin();
-                    emptyIdx.erase(eIdx);
-                    --cnt[oldNode.idx];
-                    cnt[eIdx] += 2;
-                    --freeACnt[oldNode.idx];
-                    notEmptyNotFullIdx.erase(oldNode);
-                    if (newNode.cnt > 0 && newNode.cnt < s) {
-                        notEmptyNotFullIdx.insert(newNode);
-                    }
-                    if (cnt[eIdx] < s) {
-                        notEmptyNotFullIdx.insert(Node(cnt[eIdx], eIdx));
-                    }
-                    containsFreeAIdx.erase(oldNode);
-                    if (freeACnt[oldNode.idx] != 0) {
-                        containsFreeAIdx.insert(newNode);
-                    }
-                    notFullIdx.erase(oldNode);
-                    if (newNode.cnt < s) {
-                        notFullIdx.insert(newNode);
-                    }
-                    notFullIdx.erase(Node(0, eIdx));
-                    if (cnt[eIdx] < s) {
-                        notFullIdx.insert(Node(cnt[eIdx], eIdx));
-                    }
-                    continue;
-                }
-            } else if (ch == 'A') {
-                if (!notFullIdx.empty()) {
-                    Node oldNode = *notFullIdx.begin();
-                    Node newNode = Node(oldNode.cnt + 1, oldNode.idx);
-                    containsFreeAIdx.erase(oldNode);
-                    if (emptyIdx.find(oldNode.idx) == emptyIdx.end()) {
-                        ++freeACnt[oldNode.idx];
-                        containsFreeAIdx.insert(newNode);
-                    } else {
-                        emptyIdx.erase(oldNode.idx);
-                    }
-                    ++cnt[oldNode.idx];
-                    notEmptyNotFullIdx.erase(oldNode);
-                    if (newNode.cnt > 0 && newNode.cnt < s) {
-                        notEmptyNotFullIdx.insert(newNode);
-                    }
-                    notFullIdx.erase(oldNode);
-                    if (newNode.cnt < s) {
-                        notFullIdx.insert(newNode);
-                    }
-                    continue;
-                }
+            if (ch == 'A') {
+                ++cntA;
+            }
+        }
+        int high = cntA;
+        int low = 0;
+        while (high - low > 2) {
+            int mid1 = low + (high - low) / 3;
+            int mid2 = high - (high - low) / 3;
+            if (solve(mid1, AEI, x, s) < solve(mid2, AEI, x, s)) {
+                low = mid1;
+            } else {
+                high = mid2;
             }
         }
         int ans = 0;
-        for (int i = 0; i < x; ++i) {
-            ans += cnt[i];
+        for (int i = low; i <= high; ++i) {
+            ans = max(ans, solve(i, AEI, x, s));
         }
         cout << ans << '\n';
     }
