@@ -131,83 +131,40 @@ class ModInt {
     int val_;
 };
 
-typedef ModInt<1000000007> modint;
-
-struct Node {
-    int a, cnt;
-    modint sum0, sum1;
-
-    Node() {}
-
-    Node(int a, int cnt, modint sum0, modint sum1)
-        : a(a), cnt(cnt), sum0(sum0), sum1(sum1) {}
-
-    bool operator<(const Node& other) const { return false; }
-};
-
-ostream& operator<<(ostream& out, const Node& node) {
-    cout << "a = " << node.a << " cnt = " << node.cnt << " sum0 = " << node.sum0
-         << " sum1 = " << node.sum1;
-    return out;
-}
+typedef ModInt<998244353> modint;
 
 int main() {
     ios::sync_with_stdio(false);
     cin.tie(nullptr);
 
-    const int maxn = 200001;
-    vector<modint> prod(maxn), invProd(maxn);
-    prod[0] = 1;
-    for (int i = 1; i < maxn; ++i) {
-        prod[i] = prod[i - 1] * i;
+    int N;
+    cin >> N;
+    vector<int> a(N + 1);
+    int sum = 0;
+    for (int i = 1; i <= N; ++i) {
+        cin >> a[i];
+        sum += a[i];
     }
-    invProd[maxn - 1] = prod[maxn - 1].inv();
-    for (int i = maxn - 2; i >= 0; --i) {
-        invProd[i] = invProd[i + 1] * (i + 1);
-    }
-    auto C = [&](int n, int m) {
-        return prod[n] * invProd[m] * invProd[n - m];
-    };
-
-    int t;
-    cin >> t;
-    while (t--) {
-        int n;
-        cin >> n;
-        map<int, int> cnt;
-        for (int i = 1; i <= n; ++i) {
-            long long a;
-            cin >> a;
-            ++cnt[a];
-        }
-        vector<Node> nodes;
-        nodes.push_back(Node(0, 0, 1, 1));
-        for (const auto& [key, value] : cnt) {
-            modint sum0 = 0;
-            modint sum1 = 0;
-            for (int i = 0; i <= value; ++i) {
-                if (i % 2 == 0) {
-                    sum0 += C(value, i);
-                } else {
-                    sum1 += C(value, i);
-                }
-            }
-            nodes.push_back(Node(key, value, sum0 * nodes.back().sum0,
-                                 sum1 * nodes.back().sum1));
-        }
-        modint ans = 0;
-        if (nodes[1].a == -1) {
-            for (int i = 2; i + 1 < (int)nodes.size(); ++i) {
-                if (nodes[i].a + 1 != nodes[i + 1].a) {
-                    continue;
-                }
-                ans += nodes[1].sum1 * (nodes[i + 1].sum1 / nodes[i - 1].sum1) *
-                       (nodes[i - 1].sum0 / nodes[1].sum0) *
-                       (nodes.back().sum0 / nodes[i + 1].sum0);
+    vector<modint> dp1(sum + 1, 0), dp2(sum + 1, 0);
+    dp1[0] = 1;
+    dp2[0] = 1;
+    for (int i = 1; i <= N; ++i) {
+        for (int j = sum; j >= 0; --j) {
+            dp1[j] *= 2;
+            if (j >= a[i]) {
+                dp1[j] += dp1[j - a[i]];
+                dp2[j] += dp2[j - a[i]];
             }
         }
-        cout << ans + nodes.back().sum0 << '\n';
     }
+    modint ans = modint(3).pow(N);
+    for (int i = (sum + 1) / 2; i <= sum; ++i) {
+        ans -= dp1[i] * 3;
+    }
+    if (sum % 2 == 0) {
+        ans += 3 * dp2[sum / 2];
+    }
+    cout << ans << '\n';
 
     return 0;
 }

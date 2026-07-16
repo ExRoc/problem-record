@@ -26,14 +26,20 @@ LL getRand(LL l, LL r) {
 
 int main() {
     ios::sync_with_stdio(false);
+    cin.tie(nullptr);
     srand(time(0));
 
-    cout << 1 << '\n';
     int N = getRand(1, 5);
-    int S = getRand(1, 100);
-    cout << N << " " << S << '\n';
-    for (int i = 0; i < N; ++i) {
-        cout << getRand(0, 100) << " ";
+    int M = getRand(1, 5);
+    cout << N << ' ' << M << '\n';
+    for (int i = 1; i < N; ++i) {
+        cout << (getRand(0, 1) == 1 ? '<' : '>');
+    }
+    cout << '\n';
+    for (int i = 0; i < M; ++i) {
+        int l = getRand(1, N - 1);
+        int r = getRand(l, N - 1);
+        cout << l << " " << r << '\n';
     }
 
     return 0;
