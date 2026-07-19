@@ -111,7 +111,7 @@ int main() {
         ans += dis(p1, p2);
         minDis = min(minDis, dis(nearestPointToLineSeg(o, Line(p1, p2)), o));
     }
-    printf("%.6lf\n", ans + 2 * minDis);
+    printf("%.10lf\n", ans + 2 * minDis);
 
     return 0;
 }
