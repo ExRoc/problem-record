@@ -1,0 +1,20 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+#ifdef ExRoc
+    freopen("test.txt", "r", stdin);
+#endif  // ExRoc
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int T;
+    cin >> T;
+    while (T--) {
+        int x, y;
+        cin >> x >> y;
+        cout << (x | y) << ' ' << (x & y) << ' ' << (x ^ y) << '\n';
+    }
+
+    return 0;
+}
